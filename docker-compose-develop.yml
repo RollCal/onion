@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/app
+    container_name: develop-env
+    command: >
+      sh -c "pip install --no-cache-dir -r requirements.txt &&
+             python manage.py runserver 0:80"
