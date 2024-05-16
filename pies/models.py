@@ -7,7 +7,7 @@ class Pie(models.Model):
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     content_object = GenericForeignKey('content_type', 'object_id')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    writer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     color = models.CharField(
         choices=(('Orange', 'Orange'), ('Purple', 'Purple')),
         max_length=6,
