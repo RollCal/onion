@@ -6,13 +6,19 @@ from rest_framework.views import APIView
 from .serializers import OnionSerializer, OnionVersusSerializer
 
 class OpinionView(APIView):
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            pass
+        else:
+            self.permission_classes = [IsAuthenticated]
+
+        return super().get_permissions()
+
     def get(self, request, pk):
         pass
 
     def post(self, request):
-        self.permission_classes = [IsAuthenticated]
-        self.check_permissions(request)
-
         request_data = request.data
 
         instances = []
@@ -37,9 +43,7 @@ class OpinionView(APIView):
             return Response({'data': serializer.data}, status=status.HTTP_201_CREATED)
 
     def put(self, request, pk):
-        self.permission_classes = [IsAuthenticated]
-        self.check_permissions(request)
+        pass
 
     def delete(self, request, pk):
-        self.permission_classes = [IsAuthenticated]
-        self.check_permissions(request)
+        pass
