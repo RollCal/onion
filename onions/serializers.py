@@ -7,6 +7,10 @@ class OnionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Onion
         fields = '__all__'
+        read_only_fields = ('writer',
+                            'num_of_views',
+                            'created_at',
+                            'updated_at')
 
 class OnionVersusSerializer(serializers.ModelSerializer):
 
