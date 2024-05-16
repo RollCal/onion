@@ -21,25 +21,12 @@ class PiesAPIView(APIView):
         return super().get_permissions()
 
     # pie 목록 조회
-    def get(self, object_type, object_id):
-        # 시각화된 pie 의 pies
-        if object_type == 'pie':
-            obj = get_object_or_404(Pie, id=object_id)
-        # onion의 pies
-        elif object_type == 'onion':
-            obj = get_object_or_404(Onion, id=object_id)
-        # 둘다 아닐때 not found
-        else:
-            return Response(
-                {
-                    'code': status.HTTP_404_NOT_FOUND,
-                    'message': '404 NOT FOUND',
-                 },
-                status=status.HTTP_404_NOT_FOUND)
+    def get(self, pie_id):
+        pie = get_object_or_404(Pie, id=pie_id)
         # 참조 모델 가져오기
-        content_type = ContentType.objects.get_for_model(obj)
+        content_type = ContentType.objects.get_for_model(pie)
         # 참조한 모델의 pies 가져오기
-        pies = Pie.objects.filter(content_type=content_type, object_id=object_id)
+        pies = Pie.objects.filter(content_type=content_type, object_id=pie_id)
         serializer = PieSerializer(pies, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
