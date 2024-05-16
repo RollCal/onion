@@ -16,7 +16,7 @@ docker-compose -f docker-compose.yml -p dep up -d
 ``
 
 ``
-docker-compose -f docker-compose-develop.yml -p dev up -d
+docker-compose -f docker-compose-develop.yml -p dev up
 ``
 
 If the containers stop due to a computer restart or any other reason, run the following two commands to restart the containers:
