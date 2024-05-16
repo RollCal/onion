@@ -15,7 +15,7 @@ class OpinionView(APIView):
 
         return super().get_permissions()
 
-    def get(self, request, pk):
+    def get(self, request, onion_id):
         pass
 
     def post(self, request):
@@ -42,8 +42,8 @@ class OpinionView(APIView):
             serializer.save()
             return Response({'data': serializer.data}, status=status.HTTP_201_CREATED)
 
-    def put(self, request, pk):
+    def put(self, request, onion_id):
         pass
 
-    def delete(self, request, pk):
+    def delete(self, request, onion_id):
         pass
