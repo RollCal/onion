@@ -1,6 +1,8 @@
 # Created by https://www.toptal.com/developers/gitignore/api/django,redis,visualstudiocode,pycharm
 # Edit at https://www.toptal.com/developers/gitignore?templates=django,redis,visualstudiocode,pycharm
 
+### Custom ###
+config.py
 ### Django ###
 *.log
 *.pot
