@@ -79,7 +79,7 @@ class PiesAPIView(APIView):
             return Response(response, status=status.HTTP_201_CREATED)
 
     def put(self, request, pie_id):
-        pie = get_object_or_404(Pie, pk=pie_id)
+        pie = get_object_or_404(Pie, id=pie_id)
         # 작성자 체크
         if request.user != pie.writer:
             return Response(
@@ -99,3 +99,24 @@ class PiesAPIView(APIView):
                 'data': serializer.data
             }
             return Response(response, status=status.HTTP_200_OK)
+
+    def delete(self, request, pie_id):
+        pie = get_object_or_404(Pie, id=pie_id)
+        # 작성자 체크
+        if request.user != pie.writer:
+            return Response(
+                {
+                    'code': status.HTTP_403_FORBIDDEN,
+                    'message': 'Permission denied.'
+                }
+                , status=status.HTTP_403_FORBIDDEN
+            )
+
+        pie.delete()
+        return Response(
+            {
+                'code': status.HTTP_200_OK,
+                'message': 'PIE DELETE SUCCESSFULLY',
+            }
+            , status=status.HTTP_200_OK
+        )
