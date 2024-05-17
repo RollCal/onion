@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'pies',
     'profiles',
     'votes',
+    'reports',
 ]
 
 MIDDLEWARE = [
