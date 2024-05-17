@@ -24,7 +24,15 @@ class ProfileView(APIView):
         pass
     # 회원 정보(비밀번호) 변경
     def put(self, request, user_id):
-        pass
+        user = get_object_or_404(get_user_model(), pk=user_id)
+        # 요청 유저와 수정 프로필 유저 일치 확인
+        if request.user != user:
+            return Response({"error": "Not authorized"}, status=status.HTTP_401_UNAUTHORIZED)
+        # 비밀번호 검증은 UserSerializer안에 구현되어있음 partial은 나중에 수정 요소 추가될까봐 넣어둠
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
 class ProfileOnionsListView(APIView):
     pass
 
