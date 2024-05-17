@@ -10,9 +10,9 @@ class Report(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     content_object = GenericForeignKey('content_type', 'object_id')
     report_type = models.CharField(
-        choices=(('UPDATE', 'UPDATE'), ('DELETE', 'DELETE'), ('REPORT', 'REPORT'))
-        , max_length=6
-    ),
+        choices=(('UPDATE', 'UPDATE'), ('DELETE', 'DELETE'), ('REPORT', 'REPORT')),
+        max_length=6
+    )
     report_content = models.TextField()
     writer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
