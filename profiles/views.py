@@ -6,6 +6,8 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from accounts.serializers import UserSerializer
 from .serializers import ProfileSerializer
+from onions.models import Onion
+from onions.serializers import OnionSerializer
 
 class ProfileView(APIView):
     # 권한 확인
@@ -33,8 +35,13 @@ class ProfileView(APIView):
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
+
+# 작성한 Onion 조회
 class ProfileOnionsListView(APIView):
-    pass
+    def get(self, request, user_id):
+        onions = Onion.objects.filter(writer_id=user_id)
+        serializer = OnionSerializer(onions, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 # 관리자 권한 조정
 class AdjustPermissionView(APIView):
