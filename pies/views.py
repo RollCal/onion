@@ -64,7 +64,7 @@ class PiesAPIView(APIView):
                 {
                     'code': status.HTTP_400_BAD_REQUEST,
                     'message': 'Unsupported content type',
-                 }
+                }
                 , status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -78,5 +78,24 @@ class PiesAPIView(APIView):
             }
             return Response(response, status=status.HTTP_201_CREATED)
 
+    def put(self, request, pie_id):
+        pie = get_object_or_404(Pie, pk=pie_id)
+        # 작성자 체크
+        if request.user != pie.writer:
+            return Response(
+                {
+                    'code': status.HTTP_403_FORBIDDEN,
+                    'message': 'Permission denied.'
+                }
+                , status=status.HTTP_403_FORBIDDEN
+            )
 
-
+        serializer = PieSerializer(pie, data=request.data, partial=True)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            response = {
+                'code': status.HTTP_200_OK,
+                'message': 'PIE UPDATE SUCCESSFULLY',
+                'data': serializer.data
+            }
+            return Response(response, status=status.HTTP_200_OK)

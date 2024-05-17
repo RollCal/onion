@@ -3,6 +3,7 @@
 
 ### Custom ###
 config.py
+.idea/*
 ### Django ###
 *.log
 *.pot
