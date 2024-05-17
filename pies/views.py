@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from .serializers import PieSerializer, PieDetailSerializer
 from onions.models import Onion
 from .models import Pie
-
+from django.db.models import F
 
 # Create your views here.
 class PiesAPIView(APIView):
@@ -23,12 +23,14 @@ class PiesAPIView(APIView):
     # pie 목록 조회
     def get(self, request, pie_id):
         pie = get_object_or_404(Pie, id=pie_id)
-        # 참조 모델 가져오기
-        content_type = ContentType.objects.get_for_model(pie)
-        # 참조한 모델의 pies 가져오기
-        pies = Pie.objects.filter(content_type=content_type, object_id=pie_id)
-        serializer = PieDetailSerializer(pies, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
+        pie.num_of_views = F('num_of_views') + 1
+        pie.save()
+        pie.refresh_from_db()
+
+        pies_serializer = PieDetailSerializer(pie)
+
+        return Response(pies_serializer.data, status=status.HTTP_200_OK)
 
     # pie 등록
     def post(self, request):
