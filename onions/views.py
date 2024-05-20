@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -38,6 +39,23 @@ class OpinionView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @transaction.atomic
+    def delete_onion(self, onion):
+        if onion.parent_onion is None: # 최상위 Onion일 때
+            ov_instance = get_object_or_404(OnionVersus, Q(orange_onion=onion) | Q(purple_onion=onion))
+            ov_instance.orange_onion.delete()
+            ov_instance.purple_onion.delete()
+        else:
+            onion.delete()
+
+        return Response(
+            {
+                'code': status.HTTP_200_OK,
+                'message': 'ONION DELETE SUCCESSFULLY',
+            }
+            , status=status.HTTP_200_OK
+        )
+
     def get(self, request, onion_id):
         onion = get_object_or_404(Onion, id=onion_id)
         onion_serializer = OnionDetailSerializer(onion)
@@ -48,6 +66,7 @@ class OpinionView(APIView):
 
         return Response(onion_serializer.data, status=status.HTTP_200_OK)
 
+    @transaction.atomic()
     def post(self, request, onion_id):
         parent_onion = get_object_or_404(Onion, pk=onion_id)
         serializer = OnionSerializer(data=request.data)
@@ -55,6 +74,7 @@ class OpinionView(APIView):
             serializer.save(writer=request.user, parent_onion=parent_onion)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    @transaction.atomic()
     def put(self, request, onion_id):
         onion = get_object_or_404(Onion, id=onion_id)
 
@@ -93,18 +113,13 @@ class OpinionView(APIView):
 
             return Response(response, status=status.HTTP_201_CREATED)
 
+    @transaction.atomic()
     def delete(self, request, onion_id):
         onion = get_object_or_404(Onion, id=onion_id)
         # 권한별 로직 분리
         if request.user.is_superuser:
-            onion.delete()
-            return Response(
-                {
-                    'code': status.HTTP_200_OK,
-                    'message': 'PIE DELETE SUCCESSFULLY',
-                }
-                , status=status.HTTP_200_OK
-            )
+            return self.delete_onion(onion)
+
         # 작성자 체크
         if request.user != onion.writer:
             return Response(
@@ -117,16 +132,7 @@ class OpinionView(APIView):
 
         time_difference = timezone.now() - onion.created_at
         if time_difference.total_seconds() <= 300:
-            ov_instance = get_object_or_404(OnionVersus, Q(orange_onion=onion) | Q(purple_onion=onion))
-            ov_instance.orange_onion.delete()
-            ov_instance.purple_onion.delete()
-            return Response(
-                {
-                    'code': status.HTTP_200_OK,
-                    'message': 'ONION DELETE SUCCESSFULLY',
-                }
-                , status=status.HTTP_200_OK
-            )
+            return self.delete_onion(onion)
         else:
             # 레포트 추가
             Report.objects.create(
@@ -168,29 +174,30 @@ class OpinionListView(APIView):
 
         return Response(ovserializer.data, status=status.HTTP_200_OK)
 
+
+    @transaction.atomic()
     def post(self, request):
         request_data = request.data
 
-        instances = []
-
-        for key, color in zip(request_data, ('Purple', 'Orange')):
-            form_data = {
-                'title': request_data[key],
-                'color': color,
-            }
-
-            serializer = OnionSerializer(data=form_data)
-            if serializer.is_valid(raise_exception=True):
-                instances.append(serializer.save(writer=request.user, parent_onion=None))
-
-        serializer = OnionVersusSerializer(data={
-            'purple_onion': instances[0].pk,
-            'orange_onion': instances[1].pk,
+        purple_serializer = OnionSerializer(data={
+            'title': request_data['purple_title'],
         })
+        orange_serializer = OnionSerializer(data={
+            'title': request_data['orange_title'],
+        })
+        if purple_serializer.is_valid(raise_exception=True) and \
+                orange_serializer.is_valid(raise_exception=True):
+            purple_ins = purple_serializer.save(color="Purple", writer=request.user, parent_onion=None)
+            orange_ins = orange_serializer.save(color="Orange", writer=request.user, parent_onion=None)
 
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return Response({'data': serializer.data}, status=status.HTTP_201_CREATED)
+            serializer = OnionVersusSerializer(data={
+                'purple_onion': purple_ins.pk,
+                'orange_onion': orange_ins.pk,
+            })
+
+            if serializer.is_valid(raise_exception=True):
+                serializer.save()
+                return Response({'data': serializer.data}, status=status.HTTP_201_CREATED)
 
     def format_datetime(self, dt):
         # 현재 시간 구하기
