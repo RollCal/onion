@@ -23,7 +23,6 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'accounts',
     'onions',
-    'pies',
     'profiles',
     'votes',
     'reports',
