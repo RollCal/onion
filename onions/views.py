@@ -10,6 +10,7 @@ from pies.models import Pie
 from pies.serializers import PieDetailSerializer
 from .models import Onion
 from .serializers import OnionSerializer, OnionVersusSerializer
+from django.utils import timezone
 
 class OpinionView(APIView):
 
@@ -68,3 +69,60 @@ class OpinionView(APIView):
 
     def delete(self, request, onion_id):
         pass
+
+
+class OpinionListView(APIView):
+
+    def get(self, request):
+        # URL에서 ordering 매개변수 가져오기
+        ordering = request.query_params.get('ordering', 'latest')  # 기본값은 최신순
+
+        onions_data = []
+
+        # 최신순 또는 오래된 순으로 양파 가져오기
+        if ordering == 'latest':
+            onions = Onion.objects.order_by('-created_at')
+        elif ordering == 'oldest':
+            onions = Onion.objects.order_by('created_at')
+        else:
+            onions = Onion.objects.all()
+
+        # 양파를 한 쌍씩 가져와 처리
+        for i in range(0, len(onions), 2):
+            odd_onion = onions[i]
+            even_onion = onions[i + 1]
+
+            # 양파 쌍의 조회수 가져오기
+            total_views = odd_onion.num_of_views + even_onion.num_of_views
+
+            # 양파의 제목, 총 조회수 및 생성일 포맷팅
+            odd_created_at = self.format_datetime(odd_onion.created_at)
+
+            onion_pair = f"{odd_onion.title} vs {even_onion.title} ({total_views}, {odd_created_at})"
+            onions_data.append(onion_pair)
+
+        return Response({'data': onions_data}, status=status.HTTP_200_OK)
+
+    def format_datetime(self, dt):
+        # 현재 시간 구하기
+        now = timezone.now()
+
+        # 시간차 계산
+        delta = now - dt
+
+        # 주, 일, 시간 전부터 표시
+        if delta.days > 6:
+            weeks = int(delta.days / 7)
+            return f"{weeks}주 전"
+        elif delta.days > 0:
+            return f"{delta.days}일 전"
+        else:
+            hours = int(delta.seconds / 3600)
+            if hours > 0:
+                return f"{hours}시간 전"
+            else:
+                minutes = int(delta.seconds / 60)
+                if minutes > 0:
+                    return f"{minutes}분 전"
+                else:
+                    return "방금 전"
