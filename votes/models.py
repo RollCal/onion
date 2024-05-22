@@ -8,7 +8,7 @@ from onions.models import Onion
 
 # Create your models here.
 class Vote(models.Model):
-    onion = models.ForeignKey(Onion, on_delete=models.CASCADE)
+    onion = models.ForeignKey(Onion, on_delete=models.CASCADE, related_name='votes')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     type = models.CharField(
         choices=(('Up', 'Up'), ('Down', 'Down')),

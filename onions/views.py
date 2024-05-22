@@ -1,5 +1,6 @@
 from django.db import transaction
 from rest_framework import status
+from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -8,13 +9,22 @@ from django.db.models import F, Q
 
 from reports.models import Report
 from .models import Onion, OnionVersus
-from .serializers import OnionSerializer, OnionVersusSerializer, OnionDetailSerializer, OVListSerializer
+from .serializers import (OnionSerializer,
+                          OnionVersusSerializer,
+                          OnionDetailSerializer,
+                          OVListSerializer,
+                          OnionVisualizeSerializer)
 from django.utils import timezone
 
 order_query_dict = {
     "latest": "-created_at",
     "old": "created_at",
 }
+
+@api_view(['GET'])
+def onion_visualize(request, pk):
+    onion = get_object_or_404(Onion, pk=pk)
+    return Response(OnionVisualizeSerializer(onion).data, status=status.HTTP_200_OK)
 
 class OpinionView(APIView):
 
@@ -68,10 +78,13 @@ class OpinionView(APIView):
 
     @transaction.atomic()
     def post(self, request, onion_id):
+        request_data = request.data
+
         parent_onion = get_object_or_404(Onion, pk=onion_id)
-        serializer = OnionSerializer(data=request.data)
+        serializer = OnionSerializer(data=request_data)
+
         if serializer.is_valid(raise_exception=True):
-            serializer.save(writer=request.user, parent_onion=parent_onion)
+            serializer.save(color=request_data['color'], writer=request.user, parent_onion=parent_onion)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @transaction.atomic()

@@ -3,6 +3,7 @@
 
 ### Custom ###
 config.py
+management
 .idea/*
 ### Django ###
 *.log
