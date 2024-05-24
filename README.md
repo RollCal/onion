@@ -3,7 +3,7 @@ Oπnion provides a discussion platform where users can freely share and exchange
 
 ## 🔧 Environment
 
-![image](https://github.com/RollCal/onion/assets/156996387/eae1642f-00e6-4989-b804-75791ee9473f)
+![image](https://github.com/RollCal/onion/assets/156996387/c84fcf07-b0fb-4590-9fb8-c31979943c7a)
 
 - Python: 3.11
 - React:
