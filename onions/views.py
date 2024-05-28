@@ -6,8 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from django.db.models import F, Q
-
-from reports.models import Report
+from management.models import Report
 from .models import Onion, OnionVersus
 from .serializers import (OnionSerializer,
                           OnionVersusSerializer,
@@ -15,10 +14,14 @@ from .serializers import (OnionSerializer,
                           OVListSerializer,
                           OnionVisualizeSerializer)
 from django.utils import timezone
+from .utils import get_embedding, search_words, ov_ordering
 
 order_query_dict = {
     "latest": "-created_at",
     "old": "created_at",
+    "popular": "popular",
+    "relevance": "relevance",
+    "recommend": "recommend",
 }
 
 @api_view(['GET'])
@@ -173,17 +176,23 @@ class OpinionListView(APIView):
             return super().get_permissions()
 
     def get(self, request):
-        # URL에서 ordering 매개변수 가져오기
-        ordering = request.query_params.get('ordering', 'latest')  # 기본값은 최신순
 
-        # 최신순 또는 오래된 순으로 양파 가져오기
+        ordering = request.query_params.get('ordering', 'latest')
+        search = request.query_params.get('search', '')
+
         try:
             order = order_query_dict[ordering]
         except KeyError:
             order = order_query_dict['latest']
-        onionversus = OnionVersus.objects.all().order_by(order)
-        ovserializer = OVListSerializer(onionversus, many=True)
 
+        if search != '':
+            onionversus = search_words(search)
+        else:
+            onionversus = OnionVersus.objects.all()
+
+        onionversus = ov_ordering(onionversus, order)
+
+        ovserializer = OVListSerializer(onionversus, many=True)
 
         return Response(ovserializer.data, status=status.HTTP_200_OK)
 
@@ -191,21 +200,32 @@ class OpinionListView(APIView):
     @transaction.atomic()
     def post(self, request):
         request_data = request.data
+        ov_title, purple_title, orange_title = (request_data['title'],
+                                                request_data['purple_title'],
+                                                request_data['orange_title'])
 
         purple_serializer = OnionSerializer(data={
-            'title': request_data['purple_title'],
+            'title': purple_title,
         })
         orange_serializer = OnionSerializer(data={
-            'title': request_data['orange_title'],
+            'title': orange_title,
         })
+
         if purple_serializer.is_valid(raise_exception=True) and \
                 orange_serializer.is_valid(raise_exception=True):
+
+            embeddings = get_embedding([ov_title, purple_title, orange_title])
+
             purple_ins = purple_serializer.save(color="Purple", writer=request.user, parent_onion=None)
             orange_ins = orange_serializer.save(color="Orange", writer=request.user, parent_onion=None)
 
             serializer = OnionVersusSerializer(data={
+                'ov_title': ov_title,
                 'purple_onion': purple_ins.pk,
                 'orange_onion': orange_ins.pk,
+                'title_embedding': [] if embeddings is None else embeddings[ov_title],
+                'purple_embedding': [] if embeddings is None else embeddings[purple_title],
+                'orange_embedding': [] if embeddings is None else embeddings[orange_title],
             })
 
             if serializer.is_valid(raise_exception=True):

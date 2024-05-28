@@ -2,10 +2,14 @@
 Oπnion provides a discussion platform where users can freely share and exchange diverse opinions on the internet, creating a space where they can express personal viewpoints and experience various perspectives.
 
 ## 🔧 Environment
+
+![image](https://github.com/RollCal/onion/assets/156996387/3fa6c01f-f80f-4a8d-9680-835b04a39983)
+
 - Python: 3.11
-- Redis: 
-- Postgresql: 
+- React:
 - Nginx: 
+- Redis: 7.2.5
+- Postgresql: 16.3
 
 ## 🐋 Docker Setting
 
