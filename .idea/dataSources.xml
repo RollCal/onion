@@ -15,5 +15,12 @@
       <jdbc-url>jdbc:sqlite:C:\wondo_src\training\django\onion\db.sqlite3</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="ONIONDEV@13.124.28.56" uuid="053a1aa9-fdad-4e2e-9291-e0e397b43516">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://13.124.28.56:5433/ONIONDEV</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>
