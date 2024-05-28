@@ -3,7 +3,7 @@
 
 ### Custom ###
 config.py
-management
+data_management
 .idea/*
 test.py
 ### Django ###
@@ -58,7 +58,7 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Unit test / coverage management
+# Unit test / coverage data_management
 htmlcov/
 .tox/
 .nox/
