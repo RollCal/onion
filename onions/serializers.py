@@ -52,6 +52,13 @@ class OnionVersusSerializer(serializers.ModelSerializer):
         model = OnionVersus
         fields = '__all__'
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data.pop('title_embedding', None)
+        data.pop('purple_embedding', None)
+        data.pop('orange_embedding', None)
+        return data
+
 class OVListSerializer(OnionVersusSerializer):
     orange_onion = serializers.SerializerMethodField()
     purple_onion = serializers.SerializerMethodField()
