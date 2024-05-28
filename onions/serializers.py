@@ -43,7 +43,7 @@ class OnionVisualizeSerializer(OnionSerializer):
         children = obj.child_onions.annotate(children_votes_count=Count('votes')).order_by('-children_votes_count')
         if children.exists():
             next_child = children[0]
-            return OnionVisualizeSerializer(next_child).data
+            return OnionSerializer(next_child).data
 
 
 class OnionVersusSerializer(serializers.ModelSerializer):
@@ -65,8 +65,8 @@ class OVListSerializer(OnionVersusSerializer):
 
     def get_orange_onion(self, obj):
         orange_ins = get_object_or_404(Onion, pk=obj.orange_onion_id)
-        return OnionSerializer(orange_ins).data
+        return OnionVisualizeSerializer(orange_ins).data
 
     def get_purple_onion(self, obj):
         purple_ins = get_object_or_404(Onion, pk=obj.purple_onion_id)
-        return OnionSerializer(purple_ins).data
+        return OnionVisualizeSerializer(purple_ins).data
