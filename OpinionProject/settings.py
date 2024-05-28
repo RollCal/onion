@@ -1,6 +1,9 @@
 from datetime import timedelta
 from pathlib import Path
-from .config import _SECRET_KEY
+from .config import (_SECRET_KEY,
+                     _POSTGRES_SETTING,
+                     _REDIS_SETTING,
+                     _EMBEDDING_HOST,)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -20,12 +23,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'rest_framework_simplejwt.token_blacklist',
+    'django.contrib.postgres',
+    'django_celery_results',
+    'django_celery_beat',
+
     'accounts',
     'onions',
     'profiles',
     'votes',
-    'reports',
+    'management',
 ]
 
 MIDDLEWARE = [
@@ -75,12 +83,36 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
 }
 
+# "DEVELOPMENT" OR "DEPLOYMENT"
+DB_ENVIRONMENT = "DEVELOPMENT"
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': _POSTGRES_SETTING[DB_ENVIRONMENT]["NAME"],
+        'USER': _POSTGRES_SETTING[DB_ENVIRONMENT]["USER"],
+        'PASSWORD': _POSTGRES_SETTING[DB_ENVIRONMENT]["PASSWORD"],
+        'HOST': _POSTGRES_SETTING['HOST'],
+        'PORT': _POSTGRES_SETTING[DB_ENVIRONMENT]["PORT"],
     }
 }
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{_REDIS_SETTING['HOST']}:{_REDIS_SETTING['PORT']}",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
+CELERY_BROKER_URL = f"redis://{_REDIS_SETTING['HOST']}:{_REDIS_SETTING['PORT']}/0"
+CELERY_RESULT_BACKEND = f"redis://{_REDIS_SETTING['HOST']}:{_REDIS_SETTING['PORT']}/0"
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+
+EMBEDDING_HOST = _EMBEDDING_HOST
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -99,7 +131,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Seoul'
+
+CELERY_TIMEZONE = TIME_ZONE
 
 USE_I18N = True
 
