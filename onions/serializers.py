@@ -1,6 +1,7 @@
 from collections import deque
 from itertools import chain
 
+from django.core.cache import cache
 from django.db.models import Count
 from rest_framework import serializers
 from onions.models import Onion, OnionVersus
@@ -62,6 +63,7 @@ class OnionVersusSerializer(serializers.ModelSerializer):
 class OVListSerializer(OnionVersusSerializer):
     orange_onion = serializers.SerializerMethodField()
     purple_onion = serializers.SerializerMethodField()
+    highlight = serializers.SerializerMethodField()
 
     def get_orange_onion(self, obj):
         orange_ins = get_object_or_404(Onion, pk=obj.orange_onion_id)
@@ -70,3 +72,14 @@ class OVListSerializer(OnionVersusSerializer):
     def get_purple_onion(self, obj):
         purple_ins = get_object_or_404(Onion, pk=obj.purple_onion_id)
         return OnionVisualizeSerializer(purple_ins).data
+
+    def get_highlight(self, obj):
+
+        if not cache.get("highlight"):
+            return None
+
+        highlight = cache.get("highlight")
+        if obj.id in highlight["highlighted_ids"]:
+            return highlight[obj.id]
+        else:
+            return None

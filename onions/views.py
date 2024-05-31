@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db import transaction
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -7,7 +8,7 @@ from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from django.db.models import F, Q
 from management.models import Report
-from .models import Onion, OnionVersus
+from .models import Onion, OnionVersus, OnionViews
 from .serializers import (OnionSerializer,
                           OnionVersusSerializer,
                           OnionDetailSerializer,
@@ -20,6 +21,7 @@ order_query_dict = {
     "latest": "-created_at",
     "old": "created_at",
     "popular": "popular",
+    "single": "single",
     "relevance": "relevance",
     "recommend": "recommend",
 }
@@ -76,6 +78,9 @@ class OpinionView(APIView):
         onion.num_of_views = F('num_of_views') + 1
         onion.save()
         onion.refresh_from_db()
+
+        if onion.parent_onion is None and request.user.is_authenticated:
+            OnionViews.objects.get_or_create(onion=onion, user=request.user)
 
         return Response(onion_serializer.data, status=status.HTTP_200_OK)
 
@@ -177,20 +182,45 @@ class OpinionListView(APIView):
 
     def get(self, request):
 
-        ordering = request.query_params.get('ordering', 'latest')
-        search = request.query_params.get('search', '')
+        ordering = request.data.get('order')
+        page = request.data.get('page')
+
+        if "search" in ordering:
+            search = ordering.split(":")[-1].strip()
+            ordering = "relevance"
+        else:
+            search = None
+
+        if "single" in ordering:
+            onion_id = int(ordering.split(":")[-1].strip())
+            ordering = "single"
+        else:
+            onion_id = None
 
         try:
-            order = order_query_dict[ordering]
+            ordering = order_query_dict[ordering]
         except KeyError:
-            order = order_query_dict['latest']
+            ordering = order_query_dict['latest']
 
-        if search != '':
+        onionversus = OnionVersus.objects.all()
+
+        if ordering == "single":
+            onionversus = get_object_or_404(onionversus, id=onion_id)
+            ovserializer = OVListSerializer(onionversus)
+            return Response(ovserializer.data, status=status.HTTP_200_OK)
+        elif ordering == "relevance":
             onionversus = search_words(search)
         else:
-            onionversus = OnionVersus.objects.all()
+            onionversus = ov_ordering(onionversus, ordering)
 
-        onionversus = ov_ordering(onionversus, order)
+        paginator = Paginator(onionversus, 10)
+
+        try:
+            onionversus = paginator.page(page)
+        except PageNotAnInteger:
+            onionversus = paginator.page(1)
+        except EmptyPage:
+            onionversus = paginator.page(paginator.num_pages)
 
         ovserializer = OVListSerializer(onionversus, many=True)
 
