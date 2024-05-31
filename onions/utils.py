@@ -36,9 +36,7 @@ def search_words(search):
     return onionversus
 
 def ov_ordering(ovlist, order):
-    if order == "relevance":
-        return ovlist
-    elif order == "popular":
+    if order == "popular":
         orange_votes = Vote.objects.filter(
             onion_id=OuterRef('orange_onion')
         ).values('onion__id').annotate(

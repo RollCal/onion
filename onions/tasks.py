@@ -1,81 +1,71 @@
-import datetime
-
+from datetime import date, timedelta
 from celery import shared_task
-from django.core.mail import send_mail
-from django.db.models import Case, When, ExpressionWrapper, F, IntegerField, Count, DateField
-from django.db.models.functions import Now, Cast, ExtractYear
-
-from OpinionProject import settings
 from django.core.cache import cache
+from django.db.models import Count
 
 from votes.models import Vote
-from onions.models import OnionViews
+from onions.models import OnionViews, OnionVersus
 
 cache_key = "highlight"
-topics = ["upvote", "downvote", "view"]
+topics = ["vote", "view"]
 generations = [(1, 20), (21, 40), (41, 60), (61, 80), (81, 100)]
 genders = ["M", "F"]
 
-def get_target(topic):
-    if topic in ["upvote", "downvote"]:
-        return Vote.objects.select_related(
-            "user",
-            "onion"
-        ).filter(
-            onion__parent_onion_id=None
-        )
-    elif topic in ["view"]:
-        return OnionViews.objects.select_related(
-            "user",
-            "onion"
-        ).filter(
-            onion__parent_onion_id=None
-        )
+def get_statistics(topic, target_type, target_range):
+
+    TopicModel = OnionViews if topic=="view" else Vote
+
+    if target_type == "generation":
+        today = date.today()
+        s = today - timedelta(days=365 * target_range[1])
+        e = today - timedelta(days=365 * target_range[0])
+        target = TopicModel.objects.filter(user__birth__range=(s, e))
     else:
-        return Vote.objects
+        target = TopicModel.objects.filter(user__gender=target_range)
 
-def get_generation_topic(topic, generation):
+    if not target.exists():
+        return None
 
-    target = get_target(topic)
+    target_onion = target.values('onion').annotate(target_count=Count('id'))
+    target_onion_dict = {t['onion']: t['target_count'] for t in target_onion}
+    onion_versus = OnionVersus.objects.all()
+    for onion_versus_instance in onion_versus:
+        orange = target_onion_dict.get(onion_versus_instance.orange_onion.id, 0)
+        purple = target_onion_dict.get(onion_versus_instance.purple_onion.id, 0)
+        onion_versus_instance.total = orange + purple
+    most_onion_versus = sorted(onion_versus, key=lambda x: x.total, reverse=True)[0]
 
-    highlight = target.annotate(
-        age=ExpressionWrapper(
-            ExtractYear(Now())-ExtractYear('user__birth'),
-            output_field=IntegerField()
-        )
-    ).filter(
-        age__gte=generation[0],
-        age__lte=generation[1]
-    ).values('onion_id').annotate(
-        count=Count('onion_id')
-    ).order_by('-count').first()
-
-    return highlight
-
-def get_gender_topic(topic, gender):
-
-    target = get_target(topic)
-
-    highlight = target.filter(
-        user__gender=gender
-    ).values('onion_id').annotate(
-        count=Count('onion_id')
-    ).order_by('-count').first()
-
-    return highlight
+    return most_onion_versus.id
 
 @shared_task
 def upload_highlight():
-    highlight = {}
+    highlight = {
+        'highlighted_ids': [],
+    }
 
     for topic in topics:
-        highlight[topic] = {}
         for generation in generations:
-            highlight[topic][f'{generation[0]}_to_{generation[1]}'] = get_generation_topic(topic, generation)
+
+            highlighted_id = get_statistics(
+                    topic=topic,
+                    target_type="generation",
+                    target_range=generation)
+
+            if highlighted_id in highlight:
+                highlight[highlighted_id].append(f"{topic}_{generation}")
+            else:
+                highlight[highlighted_id] = [f"{topic}_{generation}"]
+                highlight["highlighted_ids"].append(highlighted_id)
 
         for gender in genders:
-            highlight[topic][f'{gender}'] = get_gender_topic(topic, gender)
+            highlighted_id = get_statistics(
+                    topic=topic,
+                    target_type="gender",
+                    target_range=gender)
+            if highlighted_id in highlight:
+                highlight[highlighted_id].append(f"{topic}_{gender}")
+            else:
+                highlight[highlighted_id] = [f"{topic}_{gender}"]
+                highlight["highlighted_ids"].append(highlighted_id)
 
-    print(highlight)
-    #cache.set(cache_key, highlight, 10)
-
+    cache.set(cache_key, highlight, 60*60)
