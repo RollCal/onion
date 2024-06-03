@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db import transaction
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -6,19 +7,23 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from django.db.models import F, Q
-
-from reports.models import Report
-from .models import Onion, OnionVersus
+from management.models import Report
+from .models import Onion, OnionVersus, OnionViews
 from .serializers import (OnionSerializer,
                           OnionVersusSerializer,
                           OnionDetailSerializer,
                           OVListSerializer,
                           OnionVisualizeSerializer)
 from django.utils import timezone
+from .utils import get_embedding, search_words, ov_ordering
 
 order_query_dict = {
     "latest": "-created_at",
     "old": "created_at",
+    "popular": "popular",
+    "single": "single",
+    "relevance": "relevance",
+    "recommend": "recommend",
 }
 
 @api_view(['GET'])
@@ -73,6 +78,9 @@ class OpinionView(APIView):
         onion.num_of_views = F('num_of_views') + 1
         onion.save()
         onion.refresh_from_db()
+
+        if onion.parent_onion is None and request.user.is_authenticated:
+            OnionViews.objects.get_or_create(onion=onion, user=request.user)
 
         return Response(onion_serializer.data, status=status.HTTP_200_OK)
 
@@ -173,17 +181,48 @@ class OpinionListView(APIView):
             return super().get_permissions()
 
     def get(self, request):
-        # URL에서 ordering 매개변수 가져오기
-        ordering = request.query_params.get('ordering', 'latest')  # 기본값은 최신순
 
-        # 최신순 또는 오래된 순으로 양파 가져오기
+        ordering = request.data.get('order')
+        page = request.data.get('page')
+
+        if "search" in ordering:
+            search = ordering.split(":")[-1].strip()
+            ordering = "relevance"
+        else:
+            search = None
+
+        if "single" in ordering:
+            onion_id = int(ordering.split(":")[-1].strip())
+            ordering = "single"
+        else:
+            onion_id = None
+
         try:
-            order = order_query_dict[ordering]
+            ordering = order_query_dict[ordering]
         except KeyError:
-            order = order_query_dict['latest']
-        onionversus = OnionVersus.objects.all().order_by(order)
-        ovserializer = OVListSerializer(onionversus, many=True)
+            ordering = order_query_dict['latest']
 
+        onionversus = OnionVersus.objects.all()
+
+        if ordering == "single":
+            onionversus = get_object_or_404(onionversus, id=onion_id)
+            ovserializer = OVListSerializer(onionversus)
+            return Response(ovserializer.data, status=status.HTTP_200_OK)
+        elif ordering == "relevance":
+            onionversus = search_words(search)
+        else:
+            onionversus = ov_ordering(onionversus, ordering)
+
+        paginator = Paginator(onionversus, 10)
+
+        try:
+            onionversus = paginator.page(page)
+        except PageNotAnInteger:
+            onionversus = paginator.page(1)
+        except EmptyPage:
+            onionversus = paginator.page(paginator.num_pages)
+
+        ovserializer = OVListSerializer(onionversus, many=True)
 
         return Response(ovserializer.data, status=status.HTTP_200_OK)
 
@@ -191,21 +230,32 @@ class OpinionListView(APIView):
     @transaction.atomic()
     def post(self, request):
         request_data = request.data
+        ov_title, purple_title, orange_title = (request_data['title'],
+                                                request_data['purple_title'],
+                                                request_data['orange_title'])
 
         purple_serializer = OnionSerializer(data={
-            'title': request_data['purple_title'],
+            'title': purple_title,
         })
         orange_serializer = OnionSerializer(data={
-            'title': request_data['orange_title'],
+            'title': orange_title,
         })
+
         if purple_serializer.is_valid(raise_exception=True) and \
                 orange_serializer.is_valid(raise_exception=True):
+
+            embeddings = get_embedding([ov_title, purple_title, orange_title])
+
             purple_ins = purple_serializer.save(color="Purple", writer=request.user, parent_onion=None)
             orange_ins = orange_serializer.save(color="Orange", writer=request.user, parent_onion=None)
 
             serializer = OnionVersusSerializer(data={
+                'ov_title': ov_title,
                 'purple_onion': purple_ins.pk,
                 'orange_onion': orange_ins.pk,
+                'title_embedding': [] if embeddings is None else embeddings[ov_title],
+                'purple_embedding': [] if embeddings is None else embeddings[purple_title],
+                'orange_embedding': [] if embeddings is None else embeddings[orange_title],
             })
 
             if serializer.is_valid(raise_exception=True):
