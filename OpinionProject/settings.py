@@ -3,7 +3,9 @@ from pathlib import Path
 from .config import (_SECRET_KEY,
                      _POSTGRES_SETTING,
                      _REDIS_SETTING,
-                     _EMBEDDING_HOST,)
+                     _EMBEDDING_HOST,
+                     _EMAIL_HOST_USER,
+                     _EMAIL_HOST_PASSWORD)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -51,7 +53,7 @@ ROOT_URLCONF = 'OpinionProject.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates']
+        'DIRS': [BASE_DIR / 'onions/data_management/templates']
         ,
         'APP_DIRS': True,
         'OPTIONS': {
@@ -111,6 +113,13 @@ CELERY_BROKER_URL = f"redis://{_REDIS_SETTING['HOST']}:{_REDIS_SETTING['PORT']}/
 CELERY_RESULT_BACKEND = f"redis://{_REDIS_SETTING['HOST']}:{_REDIS_SETTING['PORT']}/0"
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = _EMAIL_HOST_USER
+EMAIL_HOST_PASSWORD = _EMAIL_HOST_PASSWORD
 
 EMBEDDING_HOST = _EMBEDDING_HOST
 
