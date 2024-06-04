@@ -182,8 +182,11 @@ class OpinionListView(APIView):
 
     def get(self, request):
 
-        ordering = request.data.get('order')
-        page = request.data.get('page')
+        ordering = request.GET.get('order')
+        page = request.GET.get('page')
+
+        if ordering is None or page is None:
+            return Response(data={"error": "'order' or 'page' is empty"}, status=status.HTTP_400_BAD_REQUEST)
 
         if "search" in ordering:
             search = ordering.split(":")[-1].strip()

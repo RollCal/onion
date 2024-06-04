@@ -7,4 +7,5 @@ urlpatterns = [
     path('refresh/', TokenRefreshView.as_view()),
     path('blacklist/', TokenBlacklistView.as_view()),
     path('signup/', views.AccountListAPIView.as_view()),
+    path('confirm/', views.email_confirm),
 ]

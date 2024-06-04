@@ -1,7 +1,6 @@
 from django.db import models
 from django.conf import settings
 from pgvector.django import VectorField
-from django.contrib.postgres.fields import ArrayField, JSONField
 
 class Onion(models.Model):
     writer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

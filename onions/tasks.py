@@ -1,15 +1,30 @@
+import os
 from datetime import date, timedelta
+from email.mime.image import MIMEImage
+
 from celery import shared_task
 from django.core.cache import cache
+from django.core.mail import EmailMessage
 from django.db.models import Count
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 from votes.models import Vote
 from onions.models import OnionViews, OnionVersus
+
+from OpinionProject import settings
 
 cache_key = "highlight"
 topics = ["vote", "view"]
 generations = [(1, 20), (21, 40), (41, 60), (61, 80), (81, 100)]
 genders = ["M", "F"]
+
+html_file = {
+    "highlight": ["highlight_form.html",
+                "[Opinion] 축하드립니다: 귀하의 어니언이 하이라이트 되었습니다."],
+    "confirm": ["confirm_form.html",
+                  "[Opinion] 회원가입: 이메일 인증 코드를 입력해주세요."],
+}
 
 def get_statistics(topic, target_type, target_range):
 
@@ -51,6 +66,9 @@ def upload_highlight():
                     target_type="generation",
                     target_range=generation)
 
+            if highlighted_id is None:
+                continue
+
             if highlighted_id in highlight:
                 highlight[highlighted_id].append(f"{topic}_{generation}")
             else:
@@ -62,6 +80,10 @@ def upload_highlight():
                     topic=topic,
                     target_type="gender",
                     target_range=gender)
+
+            if highlighted_id is None:
+                continue
+
             if highlighted_id in highlight:
                 highlight[highlighted_id].append(f"{topic}_{gender}")
             else:
@@ -69,3 +91,38 @@ def upload_highlight():
                 highlight["highlighted_ids"].append(highlighted_id)
 
     cache.set(cache_key, highlight, 60*60)
+
+    for h_id in highlight["highlighted_ids"]:
+        ov = OnionVersus.objects.get(id=h_id)
+        send_alert(
+            type="highlight",
+            to_email=ov.purple_onion.writer.email,
+            data={
+                "message": ov.ov_title,
+                "username": ov.purple_onion.writer.nickname
+            }
+        )
+
+@shared_task
+def send_alert(type, to_email, data):
+    form_file, subject = html_file[type]
+
+    html_content = render_to_string(form_file, data)
+
+    email = EmailMessage(
+        subject,
+        html_content,
+        'no-reply@onion-pi.com',
+        [to_email],
+    )
+    email.content_subtype = 'html'
+
+    image_path = os.path.join(settings.BASE_DIR, 'onions', 'data_management', 'templates', 'opinion-logo.jpg')
+
+    with open(image_path, 'rb') as f:
+        img = MIMEImage(f.read())
+        img.add_header('Content-ID', '<image1>')
+        img.add_header('Content-Disposition', 'inline', filename='onion-logo.jpg')
+        email.attach(img)
+
+    email.send()
