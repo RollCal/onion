@@ -38,20 +38,7 @@ class AccountListAPIView(APIView):
         serializer = UserSerializer(data=request_data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-
-        # 토큰 발급하기
-        token_obtain_pair_view = TokenObtainPairView.as_view()
-        token_response = token_obtain_pair_view(request=request._request)
-
-        if token_response.status_code == status.HTTP_200_OK:
-            response_data = {
-                'user': serializer.data,
-                'tokens': token_response.data
-            }
-            # 클라이언트에게 토큰 저장 요청 추가
-            response = Response(response_data, status=status.HTTP_201_CREATED)
-
-            return response
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
