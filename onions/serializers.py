@@ -30,10 +30,10 @@ class OnionSerializer(serializers.ModelSerializer):
         return obj.votes.filter(type='Down').count()
 
     def get_voted(self, obj):
-        if self.context =={}:
+        if 'now_user' not in self.context:
             return None
         voted = obj.votes.filter(
-            user=self.context
+            user=self.context['now_user']
         )
         if voted.exists():
             return voted[0].type
