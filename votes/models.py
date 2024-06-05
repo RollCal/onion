@@ -4,7 +4,6 @@ from django.conf import settings
 from onions.models import Onion
 
 
-# Create your models here.
 class Vote(models.Model):
     onion = models.ForeignKey(Onion, on_delete=models.CASCADE, related_name='votes')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
