@@ -11,6 +11,7 @@ class OnionSerializer(serializers.ModelSerializer):
 
     up_vote_num = serializers.SerializerMethodField()
     down_vote_num = serializers.SerializerMethodField()
+    voted = serializers.SerializerMethodField()
 
     class Meta:
         model = Onion
@@ -28,13 +29,24 @@ class OnionSerializer(serializers.ModelSerializer):
     def get_down_vote_num(self, obj):
         return obj.votes.filter(type='Down').count()
 
+    def get_voted(self, obj):
+        if self.context =={}:
+            return None
+        voted = obj.votes.filter(
+            user=self.context
+        )
+        if voted.exists():
+            return voted[0].type
+        else:
+            return None
+
 class OnionDetailSerializer(OnionSerializer):
 
     children = serializers.SerializerMethodField()
 
     def get_children(self, obj):
         children = obj.child_onions.all()
-        return OnionDetailSerializer(children, many=True).data
+        return OnionDetailSerializer(children, context=self.context, many=True).data
 
 class OnionVisualizeSerializer(OnionSerializer):
 
