@@ -73,7 +73,13 @@ class OpinionView(APIView):
 
     def get(self, request, onion_id):
         onion = get_object_or_404(Onion, id=onion_id)
-        onion_serializer = OnionDetailSerializer(onion, context={'now_user': request.user})
+
+        if request.user.is_authenticated:
+            context = {'now_user': request.user}
+        else:
+            context = {}
+
+        onion_serializer = OnionDetailSerializer(onion, context=context)
 
         onion.num_of_views = F('num_of_views') + 1
         onion.save()
@@ -227,7 +233,14 @@ class OpinionListView(APIView):
 
         ovserializer = OVListSerializer(onionversus, many=True)
 
-        return Response(ovserializer.data, status=status.HTTP_200_OK)
+        return Response({
+            "meta":{
+                "now_page": page,
+                "num_page":paginator.num_pages,
+                "ordering":ordering,
+            },
+            "data":ovserializer.data,
+        }, status=status.HTTP_200_OK)
 
 
     @transaction.atomic()
