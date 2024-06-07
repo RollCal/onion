@@ -1,3 +1,4 @@
+import sentry_sdk
 from datetime import timedelta
 from pathlib import Path
 from .config import (_SECRET_KEY,
@@ -5,17 +6,20 @@ from .config import (_SECRET_KEY,
                      _REDIS_SETTING,
                      _EMBEDDING_HOST,
                      _EMAIL_HOST_USER,
-                     _EMAIL_HOST_PASSWORD)
+                     _EMAIL_HOST_PASSWORD,
+                     _SENTRY_DSN)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = _SECRET_KEY
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
+    "www.onion-pi.com",
+    "3.36.148.220",
 ]
 
 INSTALLED_APPS = [
@@ -122,6 +126,17 @@ EMAIL_HOST_USER = _EMAIL_HOST_USER
 EMAIL_HOST_PASSWORD = _EMAIL_HOST_PASSWORD
 
 EMBEDDING_HOST = _EMBEDDING_HOST
+
+sentry_sdk.init(
+    dsn=_SENTRY_DSN,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
+)
 
 AUTH_PASSWORD_VALIDATORS = [
     {
