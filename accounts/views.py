@@ -49,18 +49,18 @@ def email_confirm(request):
     if email is None:
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    confirm_number = ''.join(random.choices('0123456789', k=5))
-    send_alert(
-        type="confirm",
-        to_email=email,
-        data={
-            'confirm_number': confirm_number,
-        }
-    )
     if cache.get(email):
         return Response(data={
             'error': '이메일 인증 메일이 이미 전송되었습니다.'
         }, status=status.HTTP_400_BAD_REQUEST)
     else:
+        confirm_number = ''.join(random.choices('0123456789', k=5))
+        send_alert(
+            type="confirm",
+            to_email=email,
+            data={
+                'confirm_number': confirm_number,
+            }
+        )
         cache.set(email, confirm_number, 60*3)
         return Response(status=status.HTTP_200_OK)
