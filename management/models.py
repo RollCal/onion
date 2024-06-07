@@ -18,12 +18,12 @@ class Report(models.Model):
     writer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # 신고글 id, type, 유저가 모두 중복 되는지 체크
-    def save(self):
+    def save(self, *args, **kwargs):
         if Report.objects.filter(
-            object_id=self.object_id,
-            content_type=self.content_type,
-            writer=self.writer
+                object_id=self.object_id,
+                content_type=self.content_type,
+                report_type=self.report_type,
+                writer=self.writer
         ).exists():
-            raise ValidationError('이미 신고한 글 입니다')
-        super().save()
+            raise ValidationError("이미 같은 내용의 신고가 존재합니다.")
+        super().save(*args, **kwargs)

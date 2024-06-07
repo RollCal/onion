@@ -16,6 +16,8 @@ from .serializers import (OnionSerializer,
                           OnionVisualizeSerializer)
 from django.utils import timezone
 from .utils import get_embedding, search_words, ov_ordering
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 
 order_query_dict = {
     "latest": "-created_at",
@@ -125,16 +127,22 @@ class OpinionView(APIView):
             return self.update_onion(request.data, onion)
         else:
             # 관리자만 볼수있는 레포트에 추가
-            Report.objects.create(
+            report = Report(
                 writer=request.user,
                 report_type='UPDATE',
                 report_content=request.data,
+                content_type=ContentType.objects.get_for_model(Onion),
                 content_object=onion
             )
+            try:
+                report.save()
+                message = "REPORT SEND SUCCESSFULLY"
+            except ValidationError as e:
+                message = "REPORT ALREADY EXISTS"
 
             response = {
                 'code': status.HTTP_201_CREATED,
-                'message': 'REPORT SEND SUCCESSFULLY',
+                'message': message,
                 'data': request.data,
             }
 
@@ -162,16 +170,23 @@ class OpinionView(APIView):
             return self.delete_onion(onion)
         else:
             # 레포트 추가
-            Report.objects.create(
+            report = Report(
                 writer=request.user,
                 report_type='DELETE',
                 report_content=request.data,
+                content_type=ContentType.objects.get_for_model(Onion),
                 content_object=onion
             )
+            try:
+                report.save()
+                message = "REPORT SEND SUCCESSFULLY"
+            except ValidationError as e:
+                message = "REPORT ALREADY EXISTS"
 
             response = {
                 'code': status.HTTP_201_CREATED,
-                'message': 'REPORT SEND SUCCESSFULLY'
+                'message': message,
+                'data': request.data,
             }
 
             return Response(response, status=status.HTTP_201_CREATED)
