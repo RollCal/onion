@@ -136,12 +136,14 @@ class OpinionView(APIView):
             )
             try:
                 report.save()
+                code = status.HTTP_201_CREATED
                 message = "REPORT SEND SUCCESSFULLY"
             except ValidationError as e:
+                code = status.HTTP_400_BAD_REQUEST
                 message = "REPORT ALREADY EXISTS"
 
             response = {
-                'code': status.HTTP_201_CREATED,
+                'code': code,
                 'message': message,
                 'data': request.data,
             }
@@ -179,12 +181,14 @@ class OpinionView(APIView):
             )
             try:
                 report.save()
+                code = status.HTTP_201_CREATED
                 message = "REPORT SEND SUCCESSFULLY"
             except ValidationError as e:
+                code = status.HTTP_400_BAD_REQUEST
                 message = "REPORT ALREADY EXISTS"
 
             response = {
-                'code': status.HTTP_201_CREATED,
+                'code': code,
                 'message': message,
                 'data': request.data,
             }
