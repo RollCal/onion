@@ -241,7 +241,7 @@ class OpinionListView(APIView):
         else:
             onionversus = ov_ordering(onionversus, ordering)
 
-        paginator = Paginator(onionversus, 10)
+        paginator = Paginator(onionversus, 3)
 
         try:
             onionversus = paginator.page(page)
@@ -253,12 +253,12 @@ class OpinionListView(APIView):
         ovserializer = OVListSerializer(onionversus, many=True)
 
         return Response({
-            "meta":{
+            "meta": {
                 "now_page": page,
-                "num_page":paginator.num_pages,
-                "ordering":ordering,
+                "num_page": paginator.num_pages,
+                "ordering": ordering,
             },
-            "data":ovserializer.data,
+            "data": ovserializer.data,
         }, status=status.HTTP_200_OK)
 
 

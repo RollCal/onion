@@ -12,11 +12,12 @@ class OnionSerializer(serializers.ModelSerializer):
     up_vote_num = serializers.SerializerMethodField()
     down_vote_num = serializers.SerializerMethodField()
     voted = serializers.SerializerMethodField()
+    writer = serializers.ReadOnlyField(source='writer.username')
 
     class Meta:
         model = Onion
         fields = '__all__'
-        read_only_fields = ('writer',
+        read_only_fields = (
                             'parent_onion',
                             'color',
                             'num_of_views',
