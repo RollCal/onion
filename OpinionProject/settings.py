@@ -40,7 +40,6 @@ INSTALLED_APPS = [
     'profiles',
     'votes',
     'management',
-    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -51,14 +50,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
 ]
-
-# CORS 관련 추가
-CORS_ORIGIN_WHITELIST = ['http://127.0.0.1:3000'
-                         ,'http://localhost:3000']
-CORS_ALLOW_CREDENTIALS = True
 
 
 ROOT_URLCONF = 'OpinionProject.urls'
