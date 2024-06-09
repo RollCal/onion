@@ -27,7 +27,6 @@ html_file = {
 }
 
 def get_statistics(topic, target_type, target_range):
-
     TopicModel = OnionViews if topic=="view" else Vote
 
     if target_type == "generation":
@@ -56,28 +55,27 @@ def get_statistics(topic, target_type, target_range):
 
     if not filtered_onion_versus:
         return None
-
     most_onion_versus = sorted(filtered_onion_versus, key=lambda x: x.total, reverse=True)[0]
-
     return most_onion_versus.id
 
 def format_label(topic, identifier):
-    if topic == "view":
-        generation_map = {
-            (1, 20): "청소년이 많이 본",
-            (21, 40): "청년이 많이 본",
-            (41, 60): "중년이 많이 본",
-            (61, 80): "장년이 많이 본",
-            (81, 100): "노년이 많이 본",
-        }
-        return generation_map.get(identifier, "알 수 없는 세대가 본")
-    elif topic == "vote":
-        gender_map = {
-            "M": "남자가 제일 많이 투표한",
-            "F": "여자가 제일 많이 투표한",
-        }
-        return gender_map.get(identifier, "알 수 없는 성별이 투표한")
-    return "알 수 없음"
+    identifier_map = {
+        (1, 20): "청소년이 많이 ",
+        (21, 40): "청년이 많이 ",
+        (41, 60): "중년이 많이 ",
+        (61, 80): "장년이 많이 ",
+        (81, 100): "노년이 많이 ",
+        "M": "남자가 제일 많이 ",
+        "F": "여자가 제일 많이 ",
+    }
+    topic_map = {
+        "view": "본, ",
+        "vote": "투표한, ",
+    }
+    label = ""
+    label += identifier_map.get(identifier, "알 수 없는 ")
+    label += topic_map.get(topic, " ")
+    return label
 
 @shared_task
 def upload_highlight():
@@ -113,7 +111,7 @@ def upload_highlight():
             if highlighted_id is None:
                 continue
 
-            label = format_label(topic, generation)
+            label = format_label(topic, gender)
 
             if highlighted_id in highlight:
                 highlight[highlighted_id].append(label)
@@ -126,10 +124,11 @@ def upload_highlight():
     else:
         prev_highlighted_ids = []
 
-    cache.set(cache_key, highlight, 60*60)
-
     for h_id in highlight["highlighted_ids"]:
         if h_id not in prev_highlighted_ids:
+
+            highlight[h_id][-1] = highlight[h_id][-1][:-2]
+
             ov = OnionVersus.objects.get(id=h_id)
             send_alert(
                 type="highlight",
@@ -139,6 +138,8 @@ def upload_highlight():
                     "username": ov.purple_onion.writer.nickname
                 }
             )
+
+    cache.set(cache_key, highlight, 60*60)
 
 @shared_task
 def send_alert(type, to_email, data):
