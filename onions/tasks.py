@@ -52,6 +52,24 @@ def get_statistics(topic, target_type, target_range):
 
     return most_onion_versus.id
 
+def format_label(topic, identifier):
+    if topic == "view":
+        generation_map = {
+            (1, 20): "청소년이 많이 본",
+            (21, 40): "청년이 많이 본",
+            (41, 60): "중년이 많이 본",
+            (61, 80): "장년이 많이 본",
+            (81, 100): "노년이 많이 본",
+        }
+        return generation_map.get(identifier, "알 수 없는 세대가 본")
+    elif topic == "vote":
+        gender_map = {
+            "M": "남자가 제일 많이 투표한",
+            "F": "여자가 제일 많이 투표한",
+        }
+        return gender_map.get(identifier, "알 수 없는 성별이 투표한")
+    return "알 수 없음"
+
 @shared_task
 def upload_highlight():
     highlight = {
@@ -69,10 +87,12 @@ def upload_highlight():
             if highlighted_id is None:
                 continue
 
+            label = format_label(topic, generation)
+
             if highlighted_id in highlight:
-                highlight[highlighted_id].append(f"{topic}_{generation}")
+                highlight[highlighted_id].append(label)
             else:
-                highlight[highlighted_id] = [f"{topic}_{generation}"]
+                highlight[highlighted_id] = [label]
                 highlight["highlighted_ids"].append(highlighted_id)
 
         for gender in genders:
@@ -84,10 +104,12 @@ def upload_highlight():
             if highlighted_id is None:
                 continue
 
+            label = format_label(topic, generation)
+
             if highlighted_id in highlight:
-                highlight[highlighted_id].append(f"{topic}_{gender}")
+                highlight[highlighted_id].append(label)
             else:
-                highlight[highlighted_id] = [f"{topic}_{gender}"]
+                highlight[highlighted_id] = [label]
                 highlight["highlighted_ids"].append(highlighted_id)
 
     if cache.get(cache_key) is not None:
