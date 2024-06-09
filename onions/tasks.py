@@ -90,18 +90,24 @@ def upload_highlight():
                 highlight[highlighted_id] = [f"{topic}_{gender}"]
                 highlight["highlighted_ids"].append(highlighted_id)
 
+    if cache.get(cache_key) is not None:
+        prev_highlighted_ids = cache.get(cache_key)["highlighted_ids"]
+    else:
+        prev_highlighted_ids = []
+
     cache.set(cache_key, highlight, 60*60)
 
     for h_id in highlight["highlighted_ids"]:
-        ov = OnionVersus.objects.get(id=h_id)
-        send_alert(
-            type="highlight",
-            to_email=ov.purple_onion.writer.email,
-            data={
-                "message": ov.ov_title,
-                "username": ov.purple_onion.writer.nickname
-            }
-        )
+        if h_id not in prev_highlighted_ids:
+            ov = OnionVersus.objects.get(id=h_id)
+            send_alert(
+                type="highlight",
+                to_email=ov.purple_onion.writer.email,
+                data={
+                    "message": ov.ov_title,
+                    "username": ov.purple_onion.writer.nickname
+                }
+            )
 
 @shared_task
 def send_alert(type, to_email, data):

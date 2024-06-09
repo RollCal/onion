@@ -16,6 +16,6 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     'upload_highlight_every_': {
         'task': 'onions.tasks.upload_highlight',
-        'schedule': crontab(minute="0,30"),
+        'schedule': crontab(minute="*/10"),
     },
 }
