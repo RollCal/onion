@@ -44,11 +44,20 @@ def get_statistics(topic, target_type, target_range):
     target_onion = target.values('onion').annotate(target_count=Count('id'))
     target_onion_dict = {t['onion']: t['target_count'] for t in target_onion}
     onion_versus = OnionVersus.objects.all()
+    filtered_onion_versus = []
+
     for onion_versus_instance in onion_versus:
         orange = target_onion_dict.get(onion_versus_instance.orange_onion.id, 0)
         purple = target_onion_dict.get(onion_versus_instance.purple_onion.id, 0)
-        onion_versus_instance.total = orange + purple
-    most_onion_versus = sorted(onion_versus, key=lambda x: x.total, reverse=True)[0]
+        total = orange + purple
+        if total >= 3:
+            onion_versus_instance.total = total
+            filtered_onion_versus.append(onion_versus_instance)
+
+    if not filtered_onion_versus:
+        return None
+
+    most_onion_versus = sorted(filtered_onion_versus, key=lambda x: x.total, reverse=True)[0]
 
     return most_onion_versus.id
 

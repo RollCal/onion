@@ -64,8 +64,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     # nickname 글자수 검증
     def validate_nickname(self, data):
-        if len(data) < 4:
-            raise serializers.ValidationError('nickname의 길이는 최소 4글자 이상이어야 합니다')
+        if len(data) < 2:
+            raise serializers.ValidationError('nickname의 길이는 최소 2글자 이상이어야 합니다')
         return data
 
     def create(self, validated_data):
