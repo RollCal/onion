@@ -235,7 +235,7 @@ class OpinionListView(APIView):
             if onionversus_cached is None:
                 cached = True
                 onionversus = ov_ordering(onionversus, ordering)
-                cache.set(ordering, onionversus, timeout=300)
+                cache.set(ordering, onionversus, timeout=30)
             else:
                 onionversus = onionversus_cached
 

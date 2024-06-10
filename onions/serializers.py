@@ -57,7 +57,7 @@ class OnionVisualizeSerializer(OnionSerializer):
         children = obj.child_onions.annotate(children_votes_count=Count('votes')).order_by('-children_votes_count')
         if children.exists():
             next_child = children[0]
-            return OnionSerializer(next_child).data
+            return OnionVisualizeSerializer(next_child).data
 
 
 class OnionVersusSerializer(serializers.ModelSerializer):
