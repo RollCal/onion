@@ -26,7 +26,6 @@ order_query_dict = {
     "latest": "-created_at",
     "old": "created_at",
     "popular": "popular",
-    "single": "single",
     "relevance": "relevance",
     "recommend": "recommend",
 }
@@ -209,7 +208,6 @@ class OpinionListView(APIView):
             return super().get_permissions()
 
     def get(self, request):
-        app_start = time.time() ###########
         ordering = request.GET.get('order')
         page = request.GET.get('page')
 
@@ -222,12 +220,6 @@ class OpinionListView(APIView):
         else:
             search = None
 
-        if "single" in ordering:
-            onion_id = int(ordering.split(":")[-1].strip())
-            ordering = "single"
-        else:
-            onion_id = None
-
         try:
             ordering = order_query_dict[ordering]
         except KeyError:
@@ -235,12 +227,8 @@ class OpinionListView(APIView):
 
         onionversus = OnionVersus.objects.all()
         cached = False
-        data_load_start = time.time() ################
-        if ordering == "single":
-            onionversus = get_object_or_404(onionversus, id=onion_id)
-            ovserializer = OVListSerializer(onionversus)
-            return Response(ovserializer.data, status=status.HTTP_200_OK)
-        elif ordering == "relevance":
+
+        if ordering == "relevance":
             onionversus = search_words(search)
         else:
             onionversus_cached = cache.get(ordering, None)
@@ -250,8 +238,7 @@ class OpinionListView(APIView):
                 cache.set(ordering, onionversus, timeout=300)
             else:
                 onionversus = onionversus_cached
-        data_load_end = time.time()###############
-        data_page_start = time.time()  ################
+
         paginator = Paginator(onionversus, 3)
 
         try:
@@ -260,25 +247,15 @@ class OpinionListView(APIView):
             onionversus = paginator.page(1)
         except EmptyPage:
             onionversus = paginator.page(paginator.num_pages)
-        data_page_end = time.time()  ################
 
-        data_ser_start = time.time()  ################
         ovserializer = OVListSerializer(onionversus, many=True)
-        data_ser_end = time.time()  ################
 
-        app_end = time.time()
         return Response({
             "meta": {
                 "now_page": page,
                 "num_page": paginator.num_pages,
                 "ordering": ordering,
                 "cached": cached,
-                "latency": {
-                    "total": round((app_end - app_start) * 1000, 2),
-                    "data_load": round((data_load_end - data_load_start) * 1000, 2),
-                    "page_load": round((data_page_end - data_page_start) * 1000, 2),
-                    "serialize": round((data_ser_end - data_ser_start) * 1000, 2),
-                }
             },
             "data": ovserializer.data,
         }, status=status.HTTP_200_OK)
