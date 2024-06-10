@@ -15,5 +15,12 @@
       <jdbc-url>jdbc:postgresql://13.124.28.56:5432/ONION</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="od_ho@13.124.28.56" uuid="d808ec76-ebd7-4fe4-b1f1-c74adaa31101">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://13.124.28.56:5433/od_ho</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>
