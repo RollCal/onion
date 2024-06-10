@@ -125,9 +125,8 @@ def upload_highlight():
         prev_highlighted_ids = []
 
     for h_id in highlight["highlighted_ids"]:
+        highlight[h_id][-1] = highlight[h_id][-1][:-2]
         if h_id not in prev_highlighted_ids:
-
-            highlight[h_id][-1] = highlight[h_id][-1][:-2]
 
             ov = OnionVersus.objects.get(id=h_id)
             send_alert(
