@@ -1,5 +1,5 @@
 import random
-
+from django.shortcuts import get_object_or_404
 from django.core.cache import cache
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
@@ -10,6 +10,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from .models import User
+
 class AccountListAPIView(APIView):
 
     def get_permissions(self):
@@ -38,6 +40,7 @@ class AccountListAPIView(APIView):
         serializer = UserSerializer(data=request_data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
+            cache.delete(request_data.get("email"))
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -45,6 +48,11 @@ class AccountListAPIView(APIView):
 @api_view(['POST'])
 def email_confirm(request):
     email = request.data.get('email')
+
+    if User.objects.filter(email=email).exists():
+        return Response(data={
+            "error": "해당 이메일은 이미 존재합니다"
+        }, status=status.HTTP_400_BAD_REQUEST)
 
     if email is None:
         return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -55,6 +63,8 @@ def email_confirm(request):
         }, status=status.HTTP_400_BAD_REQUEST)
     else:
         confirm_number = ''.join(random.choices('0123456789', k=5))
+        cache.set(email, confirm_number, 60 * 3)
+
         send_alert(
             type="confirm",
             to_email=email,
@@ -62,5 +72,4 @@ def email_confirm(request):
                 'confirm_number': confirm_number,
             }
         )
-        cache.set(email, confirm_number, 60*3)
         return Response(status=status.HTTP_200_OK)
