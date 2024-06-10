@@ -30,10 +30,10 @@ class AccountListAPIView(APIView):
                 'error': 'confirm is None'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        if confirm != cache.get(request_data.get("email")):
-            return Response(data={
-                'error': 'confirm number does not match'
-            }, status=status.HTTP_400_BAD_REQUEST)
+        # if confirm != cache.get(request_data.get("email")):
+        #     return Response(data={
+        #         'error': 'confirm number does not match'
+        #     }, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = UserSerializer(data=request_data)
         if serializer.is_valid(raise_exception=True):
