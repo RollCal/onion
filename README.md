@@ -11,7 +11,8 @@ Oπnion provides a discussion platform where users can freely share and exchange
 
 ## 🔧 Environment
 
-![image](https://github.com/RollCal/onion/assets/159862122/8e0dba91-e3bc-4beb-8c0f-2a3451769ecd)
+![Opinion](https://github.com/RollCal/onion/assets/156996387/9ec5577c-a0d1-4379-b42d-c67ee8f73a5b)
+
 
 - [Python: 3.11](https://docs.python.org/ko/3.11/)
 - [React: 18.3.1](https://react.dev/learn)
