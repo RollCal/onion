@@ -6,7 +6,7 @@ Oπnion provides a discussion platform where users can freely share and exchange
 ![image](https://github.com/RollCal/onion/assets/156996387/3fa6c01f-f80f-4a8d-9680-835b04a39983)
 
 - Python: 3.11
-- React:
+- React: 18.3.1
 - Nginx: 
 - Redis: 7.2.5
 - Postgresql: 16.3
@@ -33,20 +33,34 @@ docker start develop-env
 docker start deploy-env
 ``
 
-## ERD
-
-## API
-
 # 🚀 Release Notes
 
-## Opinion 0.1.0(0000-00-00)
+## Opinion 1.0.0
 
-### New Features:
+Thank you for using Opinion! We look forward to your feedback.
 
-### Improvements:
+### Release Information
+Version: 1.0
+Release Date: 2024-06-13
 
-### Bug Fixes:
+### Development Period
+- Start Date: 2024.05.10
+- End Date: 2024.06.10
 
-### Known Issues:
+## Key Features
 
-### Other Information:
+✔ Feature 1: Tree-Structured Posts
+
+Feel free to leave comments under posts. Popular posts are linked and visualized in the post list!
+  
+✔ Feature 2: Personalized Content
+
+Highlight popular posts tailored to various ages and genders!
+  
+✔ Feature 3: Embedding Search
+
+Experience a more flexible and intuitive search experience!
+
+## Usage
+Here is how you can use Opinion:
+[demo video](https://youtu.be/yBol1qEtEXc)
