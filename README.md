@@ -2,11 +2,11 @@
 Oπnion provides a discussion platform where users can freely share and exchange diverse opinions on the internet, creating a space where they can express personal viewpoints and experience various perspectives.
 
 ## 📑 Table of Contents
-[Environment](# 🔧 Environment)
-[Docker Setting](# 🐋 Docker Setting)
-[Release Notes](# 🚀 Release Notes)
-[Key Features](# Key Features)
-[Usage](# Usage)
+- [Environment](# 🔧 Environment)
+- [Docker Setting](# 🐋 Docker Setting)
+- [Release Notes](# 🚀 Release Notes)
+- [Key Features](# Key Features)
+- [Usage](# Usage)
 
 
 ## 🔧 Environment
