@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "80:80"
+    volumes:
+      - .:/app
+    container_name: deploy-env
+    command: >
+      sh -c "gunicorn --bind 0.0.0.0:80 OpinionProject.wsgi:application"
+    restart: always
+
+  celery_worker:
+    build: .
+    volumes:
+      - .:/app
+    command: celery -A OpinionProject worker -l info
+    restart: always
+    container_name: celery-worker
+    depends_on:
+      - web
+
+  celery_beat:
+    build: .
+    volumes:
+      - .:/app
+    command: celery -A OpinionProject beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    restart: always
+    container_name: celery-beat
+    depends_on:
+      - web
