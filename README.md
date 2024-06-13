@@ -14,8 +14,6 @@ Oπnion provides a discussion platform where users can freely share and exchange
 ![image](https://github.com/RollCal/onion/assets/159862122/8e0dba91-e3bc-4beb-8c0f-2a3451769ecd)
 
 - [Python: 3.11](https://docs.python.org/ko/3.11/)
-![개발환경](https://github.com/RollCal/onion/assets/159862122/8e0dba91-e3bc-4beb-8c0f-2a3451769ecd)
-
 - [React: 18.3.1](https://react.dev/learn)
 - [Nginx](https://nginx.org/en/docs/)
 - [Redis: 7.2.5](https://redis.io/docs/latest/)
